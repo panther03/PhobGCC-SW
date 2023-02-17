@@ -464,6 +464,7 @@ void commInt() {
 
 			//if the command byte is all 0s it is probe command, we will send a probe response
 			if(_cmdByte == 0b00000000){
+				Serial.println("Probe");
 				//wait for the stop bit to be received and clear it
 				while(!Serial2.available()){}
 				Serial2.clear();
@@ -492,6 +493,7 @@ void commInt() {
 			}
 			//if the command byte is 01000001 it is an origin command, we will send an origin response
 			else if(_cmdByte == 0b01000001){
+				Serial.println("Origin");
 				//wait for the stop bit to be received and clear it
 				while(!Serial2.available()){}
 				Serial2.clear();
@@ -522,6 +524,7 @@ void commInt() {
 			//to do this we will set our expected bit queue to the remaining length of the poll command, and wait until it is finished
 			else if(_cmdByte == 0b01000000){
 				//digitalWriteFast(_pinLED,LOW);
+				Serial.println("Poll");
 				_waiting = true;
 				_bitQueue = 16;
 				setCommResponse(_commResponse, _btn);

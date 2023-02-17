@@ -55,6 +55,11 @@ enum ExtrasSlot{
 	EXTRAS_UNSET
 };
 
+enum MarioMode {
+	NO_MARIO,
+	WIIVC
+};
+
 union IntOrFloat{
 	int intValue;
 	float floatValue;
@@ -159,6 +164,7 @@ struct Cardinals{
 };
 
 struct ControlConfig{
+	MarioMode marioMode;
 	JumpConfig jumpConfig;
 	const int jumpConfigMin;
 	const int jumpConfigMax;

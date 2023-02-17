@@ -16,7 +16,7 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy3_2DiodeShort.h"// For PhobGCC board 1.1 with Teensy 3.2 and the diode shorted
 //#include "../teensy/Phob1_1Teensy4_0.h"          // For PhobGCC board 1.1 with Teensy 4.0
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
-//#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
+#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 //#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
 //#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
@@ -33,6 +33,7 @@ using std::max;
 #define SW_VERSION 28
 
 ControlConfig _controls{
+	.marioMode = NO_MARIO,
 	.jumpConfig = DEFAULTJUMP,
 	.jumpConfigMin = DEFAULTJUMP,
 	.jumpConfigMax = SWAP_YR,
@@ -640,35 +641,41 @@ void adjustTriggerOffset(const WhichTrigger trigger, const Increase increase, Bu
 
 //apply digital button swaps for L, R, or Z jumping
 void applyJump(const ControlConfig &controls, const Buttons &hardware, Buttons &btn){
-	switch(controls.jumpConfig){
-		case SWAP_XZ:
-			btn.X = hardware.Z;
-			btn.Z = hardware.X;
-			break;
-		case SWAP_YZ:
-			btn.Y = hardware.Z;
-			btn.Z = hardware.Y;
-			break;
-		case SWAP_XL:
-			btn.X = hardware.L;
-			btn.L = hardware.X;
-			break;
-		case SWAP_YL:
-			btn.Y = hardware.L;
-			btn.L = hardware.Y;
-			break;
-		case SWAP_XR:
-			btn.X = hardware.R;
-			btn.R = hardware.X;
-			break;
-		case SWAP_YR:
-			btn.Y = hardware.R;
-			btn.R = hardware.Y;
-			break;
-		default:
-			break;
-			//nothing
+	if (controls.marioMode == WIIVC) {
+		btn.S = hardware.Z;
+		btn.Z = hardware.S;
+	} else {
+		switch(controls.jumpConfig){
+			case SWAP_XZ:
+				btn.X = hardware.Z;
+				btn.Z = hardware.X;
+				break;
+			case SWAP_YZ:
+				btn.Y = hardware.Z;
+				btn.Z = hardware.Y;
+				break;
+			case SWAP_XL:
+				btn.X = hardware.L;
+				btn.L = hardware.X;
+				break;
+			case SWAP_YL:
+				btn.Y = hardware.L;
+				btn.L = hardware.Y;
+				break;
+			case SWAP_XR:
+				btn.X = hardware.R;
+				btn.R = hardware.X;
+				break;
+			case SWAP_YR:
+				btn.Y = hardware.R;
+				btn.R = hardware.Y;
+				break;
+			default:
+				break;
+				//nothing
+		}
 	}
+		
 }
 
 void setJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
@@ -708,6 +715,27 @@ void setJumpConfig(JumpConfig jumpConfig, ControlConfig &controls){
 #endif //ARDUINO
 	}
 	setJumpSetting(controls.jumpConfig);
+#ifdef BATCHSETTINGS
+	commitSettings();
+#endif //BATCHSETTINGS
+}
+
+void setMarioMode(MarioMode m, ControlConfig &controls){
+#ifdef ARDUINO
+	Serial.print("setting mario mode to to: ");
+#endif //ARDUINO
+	controls.marioMode = m;
+#ifdef ARDUINO
+	switch (m) {
+		case WIIVC:
+			Serial.println("wiivc");
+			break;
+		default:
+			Serial.println("no mario");
+			break;
+	}
+#endif //ARDUINO
+	setMarioSetting(controls.marioMode);
 #ifdef BATCHSETTINGS
 	commitSettings();
 #endif //BATCHSETTINGS
@@ -900,6 +928,8 @@ int readEEPROM(ControlConfig &controls, FilterGains &gains, FilterGains &normGai
 		controls.jumpConfig = DEFAULTJUMP;
 		numberOfNaN++;
 	}
+
+	controls.marioMode = getMarioSetting();
 
 	//get the L setting
 	controls.lConfig = getLSetting();
@@ -1295,6 +1325,9 @@ void resetDefaults(HardReset reset, ControlConfig &controls, FilterGains &gains,
 
 	controls.jumpConfig = DEFAULTJUMP;
 	setJumpSetting(controls.jumpConfig);
+	
+	controls.marioMode = NO_MARIO;
+	setMarioSetting(controls.marioMode);
 
 	controls.lConfig = controls.triggerDefault;
 	controls.rConfig = controls.triggerDefault;
@@ -1736,6 +1769,21 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	}
 
 	//Apply any further button remapping to tempBtn here
+	// FUCK analog triggers
+	/*
+	if (controls.marioMode != NO_MARIO) {
+		tempBtn.Ra = (uint8_t) 0;
+		tempBtn.La = (uint8_t) 0;
+		// dpad lockout
+		// if one dpad button is pressed, do not allow another to be pressed until that one is unpressed
+		if ((btn.Dd && !tempBtn.Dd) || (btn.Du && !tempBtn.Du) || (btn.Dl && !tempBtn.Dl) || (btn.Dr && !tempBtn.Dr)) {
+			tempBtn.Dd = btn.Dd;
+			tempBtn.Du = btn.Du;
+			tempBtn.Dl = btn.Dl;
+			tempBtn.Dr = btn.Dr;
+		}
+	}*/
+
 
 	//Here we make sure LRAS actually operate.
 	if(hardware.L && hardware.R && hardware.A && hardware.S) {
@@ -1787,9 +1835,9 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	* Increase/Decrease Y-Axis Offset:  RYZ+Du/Dd
 	* Show C-Stick Settings:  R+Start
 	*
-	* Swap X with Z:  XZ+Start
-	* Swap Y with Z:  YZ+Start
-	* Swap X with L:  LX+Start
+	* Swap X with Z:  XZ+Start  NOW MARIO MODE = WIIVC
+	* Swap Y with Z:  YZ+Start		
+	* Swap X with L:  LX+Start		MARIO MODE = NO_MARIO
 	* Swap Y with L:  LY+Start
 	* Swap X with R:  RX+Start
 	* Swap Y with R:  Ry+Start
@@ -1939,13 +1987,13 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 		} else if(hardware.R && hardware.B && hardware.Dd) { //Decrease R-trigger Offset
 			adjustTriggerOffset(RTRIGGER, DECREASE, btn, hardware, controls);
 		} else if(hardware.X && hardware.Z && hardware.S) { //Swap X and Z
-			setJumpConfig(SWAP_XZ, controls);
+			setMarioMode(WIIVC, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.Z && hardware.S) { //Swap Y and Z
 			setJumpConfig(SWAP_YZ, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.X && hardware.L && hardware.S) { //Swap X and L
-			setJumpConfig(SWAP_XL, controls);
+			setMarioMode(NO_MARIO, controls);
 			freezeSticks(2000, btn, hardware);
 		} else if(hardware.Y && hardware.L && hardware.S) { //Swap Y and L
 			setJumpConfig(SWAP_YL, controls);
@@ -2216,10 +2264,22 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 		}
 	}
 	if(readC){
-		float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
-		if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
-			btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
+		if (controls.marioMode == WIIVC) {
+			if (hardware.X) {
+				btn.Cx = (uint8_t) 0xFF;
+			} else if (hardware.Y) {
+				btn.Cx = (uint8_t) 0x00;
+			} else {
+				btn.Cx = (uint8_t) 0x80;
+			}
+		} else {
+			float diffCx = (remappedCx+_floatOrigin)-btn.Cx;
+			if( (diffCx > (1.0 + hystVal)) || (diffCx < -hystVal) ){
+				btn.Cx = (uint8_t) (remappedCx+_floatOrigin);
+			}
 		}
+		
+		
 		float diffCy = (remappedCy+_floatOrigin)-btn.Cy;
 		if( (diffCy > (1.0 + hystVal)) || (diffCy < -hystVal) ){
 			btn.Cy = (uint8_t) (remappedCy+_floatOrigin);

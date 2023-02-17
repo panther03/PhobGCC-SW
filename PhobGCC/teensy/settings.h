@@ -19,7 +19,8 @@ namespace Eeprom {
 	const int _eepromxSnapback = _eepromCPointsY+_noOfCalibrationPoints*_bytesPerFloat;
 	const int _eepromySnapback = _eepromxSnapback+_bytesPerFloat;
 	const int _eepromJump = _eepromySnapback+_bytesPerFloat;
-	const int _eepromANotchAngles = _eepromJump+_bytesPerFloat;
+	const int _eepromMario = _eepromJump+_bytesPerFloat;
+	const int _eepromANotchAngles = _eepromMario+_bytesPerFloat;
 	const int _eepromCNotchAngles = _eepromANotchAngles+_noOfNotches*_bytesPerFloat;
 	const int _eepromLToggle = _eepromCNotchAngles+_noOfNotches*_bytesPerFloat;
 	const int _eepromRToggle = _eepromLToggle+_bytesPerFloat;
@@ -54,6 +55,16 @@ JumpConfig getJumpSetting() {
 void setJumpSetting(const JumpConfig jump) {
 	EEPROM.put(Eeprom::_eepromJump, jump);
 };
+
+MarioMode getMarioSetting() {
+	MarioMode m;
+	EEPROM.get(Eeprom::_eepromMario, m);
+	return m;
+}
+
+void setMarioSetting(const MarioMode m) {
+	EEPROM.put(Eeprom::_eepromMario, m);
+}
 
 int getLSetting() {
 	int output;
