@@ -356,9 +356,7 @@ void cleanCalPoints(const float calPointsX[], const float calPointsY[], const fl
 
 	debug_println("The cleaned calibration points are:");
 	for(int i = 0; i< (_noOfNotches+1); i++){
-		debug_print(cleanedPointsX[i], 4);
 		debug_print(",");
-		debug_println(cleanedPointsY[i], 4);
 	}
 
 	debug_println("The corresponding notch points are:");
@@ -624,10 +622,18 @@ void linearizeCal(const float inX[], const float inY[], float outX[], float outY
 	stickParams.fitCoeffsY[3] = stickParams.fitCoeffsY[3] - yZeroError;
 
 	debug_println("The fit coefficients are  are (x,y):");
+	union {
+		int i;
+		float f;
+	} bullshit;
+	union {
+		int i;
+		float f;
+	} bullshit2;
 	for(int i = 0; i < 4; i++){
-		debug_print(stickParams.fitCoeffsX[i]);
-		debug_print(",");
-		debug_println(stickParams.fitCoeffsY[i]);
+		bullshit.f = stickParams.fitCoeffsX[i];
+		bullshit2.f = stickParams.fitCoeffsY[i];
+		printf("(%x,%x)\n", bullshit.i, bullshit2.i);
 	}
 
 	debug_println("The linearized points are:");

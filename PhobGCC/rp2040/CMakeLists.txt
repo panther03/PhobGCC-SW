@@ -19,6 +19,8 @@ add_executable(phobgcc_rp2040
 	src/drawMenu.cpp
 	src/graph.cpp
 	src/joybus.cpp
+	src/usb.cpp
+	src/usb_descriptors.c
 	src/main.cpp
 	src/navigateMenu.cpp
 	src/storage.cpp
@@ -57,7 +59,9 @@ target_link_libraries(phobgcc_rp2040
 	hardware_pwm
 	hardware_spi
 	hardware_sync
-	hardware_timer)
+	hardware_timer
+	tinyusb_device
+    tinyusb_board)
 
 pico_add_extra_outputs(phobgcc_rp2040)
-pico_enable_stdio_usb(phobgcc_rp2040 1)
+#pico_enable_stdio_usb(phobgcc_rp2040 1)

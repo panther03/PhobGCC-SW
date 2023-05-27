@@ -1,12 +1,11 @@
 #ifndef DEBUG_H
 #define DEBUG_H
+#include <stdio.h>
 
 #define DEBUG_ENABLED 0
 
 inline void debug_print(const char* str) {
-#if (DEBUG_ENABLED)
-  //print(str);
-#endif
+  printf(str);
 }
 inline void debug_print(char c) {
 #if (DEBUG_ENABLED)
@@ -14,9 +13,7 @@ inline void debug_print(char c) {
 #endif
 }
 inline void debug_print(int i, int x = 0) {
-#if (DEBUG_ENABLED)
-  //print(i, x);
-#endif
+  printf("%x", i);
 }
 inline void debug_print(long l, int x = 0) {
 #if (DEBUG_ENABLED)
@@ -30,9 +27,8 @@ inline void debug_print(double d, int x = 0) {
 }
 
 inline void debug_println(const char* str) {
-#if (DEBUG_ENABLED)
-  //println(str);
-#endif
+  printf(str);
+  printf("\n");
 }
 inline void debug_println(char c) {
 #if (DEBUG_ENABLED)
@@ -40,9 +36,8 @@ inline void debug_println(char c) {
 #endif
 }
 inline void debug_println(int i, int x = 0) {
-#if (DEBUG_ENABLED)
-  //println(i, x);
-#endif
+  printf("%x", i);
+  printf("\n");
 }
 inline void debug_println(long l, int x = 0) {
 #if (DEBUG_ENABLED)

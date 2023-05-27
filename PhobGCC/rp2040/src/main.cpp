@@ -8,6 +8,7 @@
 #include "comms/joybus.hpp"
 #include "cvideo.h"
 #include "cvideo_variables.h"
+#include "usb.h"
 
 volatile bool _videoOut = false;
 //Variables used by PhobVision to communicate with the event loop core
@@ -45,6 +46,8 @@ GCReport __no_inline_not_in_flash_func(buttonsToGCReport)() {
 
 void second_core() {
 
+	stdio_uart_init_full(uart0, 115200, 12, -1);
+	
 	gpio_set_function(_pinLED, GPIO_FUNC_PWM);
 	uint slice_num = pwm_gpio_to_slice_num(_pinLED);
 	pwm_set_wrap(slice_num, 255);
@@ -822,6 +825,8 @@ int main() {
 
 	multicore_launch_core1(second_core);
 
+	usb_init_comms();
+
 	//Run comms unless Z is held while plugging in
 	if(_hardware.Z) {
 #ifdef BUILD_DEV
@@ -831,11 +836,17 @@ int main() {
 #endif //BUILD_DEV
 		videoOut(_pinDac0, _btn, _hardware, _raw, _controls, _aStickParams, _cStickParams, _dataCapture, _sync, _pleaseCommit, _currentCalStep, version);
 	} else {
+		while (1) {
+			usb_run_comms(_btn);
+		}
+		/*
 		enterMode(_pinTX,
 				_pinRumble,
 				_pinBrake,
 				_rumblePower,
 				buttonsToGCReport);
+		*/
+
 	}
 
 }

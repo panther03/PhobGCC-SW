@@ -18,7 +18,7 @@ using std::max;
 //#include "../teensy/Phob1_1Teensy4_0DiodeShort.h"// For PhobGCC board 1.1 with Teensy 4.0 and the diode shorted
 //#include "../teensy/Phob1_2Teensy4_0.h"          // For PhobGCC board 1.2.x with Teensy 4.0
 //#include "../rp2040/include/PicoProtoboard.h"    // For a protoboard with a Pico on it, used for developing for the RP2040
-//#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
+#include "../rp2040/include/Phob2_0.h"           // For PhobGCC Board 2.0 with RP2040
 
 #include "structsAndEnums.h"
 #include "variables.h"
@@ -2160,7 +2160,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	//Read the sticks repeatedly until it's been 1 millisecond since the last iteration
 	//This is for denoising and making sure the loop runs at 1000 Hz
 	//We want to stop the ADC reading early enough that we don't overrun 1000 microseconds
-	uint32_t adcCount = 0;
+	/*uint32_t adcCount = 0;
 	uint32_t aXSum = 0;
 	uint32_t aYSum = 0;
 	uint32_t cXSum = 0;
@@ -2182,13 +2182,13 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	//Then we spinlock to get the 1 kHz more exactly.
 	while(afterMicros-lastMicros < 1000) {
 		afterMicros = micros();
-	}
+	}*/
 
 	//debug_println(adcCount);
-	float aStickX = aXSum/(float)adcCount/4096.0*_ADCScale;
-	float aStickY = aYSum/(float)adcCount/4096.0*_ADCScale;
-	float cStickX = cXSum/(float)adcCount/4096.0*_ADCScale;
-	float cStickY = cYSum/(float)adcCount/4096.0*_ADCScale;
+	float aStickX = ((float)readAx(pin))/4096.0;
+	float aStickY = ((float)readAy(pin))/4096.0;
+	float cStickX = ((float)readCx(pin))/4096.0;
+	float cStickY = ((float)readCy(pin))/4096.0;
 	/*
 #else //CLEANADC: read only once
 	float aStickX = readAx(pin)/4096.0;
@@ -2304,7 +2304,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	raw.cxUnfiltered = fmin(125, fmax(-125, remappedCxUnfiltered));
 	raw.cyUnfiltered = fmin(125, fmax(-125, remappedCyUnfiltered));
 
-	bool skipAHyst = false;
+	bool skipAHyst = true;
 #ifdef EXTRAS_ESS
 	//ESS adapter functionality for Ocarina of Time on WiiVC if enabled
 	skipAHyst = ess::remap(&remappedAx, &remappedAy, controls.extras[ess::extrasEssConfigSlot].config);
@@ -2323,8 +2323,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 				btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
 			}
 		} else {
-			btn.Ax = (uint8_t) (remappedAx+_floatOrigin);
-			btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
+			btn.Ax = (uint8_t) (raw.axLinearized+_floatOrigin);
+			btn.Ay = (uint8_t) (raw.ayLinearized+_floatOrigin);
 		}
 	}
 	if(readC){
