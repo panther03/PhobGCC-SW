@@ -700,15 +700,16 @@ void print_mtx(const float matrix[3][3]){
 
 
 void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], const float yOut[], const int regions, StickParams &stickParams){
+	debug_println("The affine transform coefficients are:");
 	for(int i = 1; i <= regions; i++){
-		debug_print("calibrating region: ");
-		debug_println(i);
+		//debug_print("calibrating region: ");
+		//debug_println(i);
 
 		float pointsIn[3][3];
 		float pointsOut[3][3];
 
 		if(i == (regions)){
-			debug_println("final region");
+			//debug_println("final region");
 			pointsIn[0][0] = xIn[0];
 			pointsIn[0][1] = xIn[i];
 			pointsIn[0][2] = xIn[1];
@@ -749,10 +750,10 @@ void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], co
 			pointsOut[2][2] = 1;
 		}
 
-		debug_println("In points:");
-		print_mtx(pointsIn);
-		debug_println("Out points:");
-		print_mtx(pointsOut);
+		//debug_println("In points:");
+		//print_mtx(pointsIn);
+		//debug_println("Out points:");
+		//print_mtx(pointsOut);
 
 		float temp[3][3];
 		inverse(pointsIn, temp);
@@ -760,11 +761,10 @@ void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], co
 		float A[3][3];
 		matrixMatrixMult(pointsOut, temp, A);
 
-		debug_println("The transform matrix is:");
-		print_mtx(A);
+		//debug_println("The transform matrix is:");
+		//print_mtx(A);
 
-		debug_println("The affine transform coefficients for this region are:");
-
+		debug_print("{");
 		for(int j = 0; j <2;j++){
 			for(int k = 0; k<2;k++){
 				stickParams.affineCoeffs[i-1][j*2+k] = A[j][k];
@@ -772,16 +772,19 @@ void notchCalibrate(const float xIn[], const float yIn[], const float xOut[], co
 				debug_print(",");
 			}
 		}
-
-		debug_println();
-		debug_println("The angle defining this  regions is:");
+		debug_println("},");
 		stickParams.boundaryAngles[i-1] = atan2f((yIn[i]-yIn[0]),(xIn[i]-xIn[0]));
-		//unwrap the angles so that the first has the smallest value
 		if(stickParams.boundaryAngles[i-1] < stickParams.boundaryAngles[0]){
 			stickParams.boundaryAngles[i-1] += M_PI*2;
 		}
-		debug_println(stickParams.boundaryAngles[i-1]);
 	}
+	debug_println("The angles defining the regions are:\n {");
+	for(int i = 1; i <= regions; i++){
+		//unwrap the angles so that the first has the smallest value
+		debug_print(stickParams.boundaryAngles[i-1]);
+		debug_println(",");
+	}
+	debug_println("};");
 };
 
 #endif //STICKCAL_H

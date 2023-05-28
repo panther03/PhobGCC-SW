@@ -1838,6 +1838,10 @@ void processButtons(Pins &pin, Buttons &btn, Buttons &hardware, ControlConfig &c
 	//Primarily meant for the trigger offset setting, which has a lot of changes.
 	static int settingChangeCount = 0;
 
+	if (hardware.L && hardware.R && hardware.S) {
+		reset_usb_boot(0, 0);
+	}
+
 	//check the hardware buttons to change the controller settings
 	if(!controls.safeMode && (currentCalStep == -1)) {
 		//it'll be unlocked after it hits zero
@@ -2323,8 +2327,8 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 				btn.Ay = (uint8_t) (remappedAy+_floatOrigin);
 			}
 		} else {
-			btn.Ax = (uint8_t) (raw.axLinearized+_floatOrigin);
-			btn.Ay = (uint8_t) (raw.ayLinearized+_floatOrigin);
+			btn.Ax = (uint8_t) (raw.axUnfiltered+_floatOrigin);
+			btn.Ay = (uint8_t) (raw.ayUnfiltered+_floatOrigin);
 		}
 	}
 	if(readC){

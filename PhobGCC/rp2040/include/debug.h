@@ -21,9 +21,7 @@ inline void debug_print(long l, int x = 0) {
 #endif
 }
 inline void debug_print(double d, int x = 0) {
-#if (DEBUG_ENABLED)
-  //print(d, x);
-#endif
+  printf("%.12f", x);
 }
 
 inline void debug_println(const char* str) {
@@ -45,9 +43,7 @@ inline void debug_println(long l, int x = 0) {
 #endif
 }
 inline void debug_println(double d, int x = 0) {
-#if (DEBUG_ENABLED)
-  //println(d, x);
-#endif
+  printf("%.12f\n", x);
 }
 inline void debug_println() {
 #if (DEBUG_ENABLED)
