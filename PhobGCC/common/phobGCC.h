@@ -2308,7 +2308,7 @@ void readSticks(int readA, int readC, Buttons &btn, Pins &pin, RawStick &raw, co
 	raw.cxUnfiltered = fmin(125, fmax(-125, remappedCxUnfiltered));
 	raw.cyUnfiltered = fmin(125, fmax(-125, remappedCyUnfiltered));
 
-	bool skipAHyst = true;
+	bool skipAHyst = false;
 #ifdef EXTRAS_ESS
 	//ESS adapter functionality for Ocarina of Time on WiiVC if enabled
 	skipAHyst = ess::remap(&remappedAx, &remappedAy, controls.extras[ess::extrasEssConfigSlot].config);
